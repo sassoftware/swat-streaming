@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: swat-streaming-config
+  namespace: swat-streaming
+data:
+  KAFKA_BOOTSTRAP_SERVERS: "kafka-broker-1.example.com:9093,kafka-broker-2.example.com:9093"
+  KAFKA_TOPIC: "viya.events"
+  KAFKA_GROUP_ID: "swat-streaming-viya-events"
+  KAFKA_SECURITY_PROTOCOL: "SASL_SSL"
+  KAFKA_SASL_MECHANISM: "SCRAM-SHA-512"
+  KAFKA_SSL_CA_LOCATION: "/etc/kafka/certs/ca.crt"
+  KAFKA_AUTO_OFFSET_RESET: "latest"
+
+  CAS_HOST: "https://viya.example.com/cas-shared-default-http"
+  CAS_PROTOCOL: "https"
+  CAS_CASLIB: "Public"
+  CAS_TABLE_NAME: "kafka_stream"
+  CAS_TABLE_PROMOTE: "true"
+  CAS_SSL_CA_LIST: "/etc/cas/certs/ca-bundle.crt"
+  CAS_PERSIST_ON_SHUTDOWN: "false"
+
+  BATCH_SIZE: "500"
+  BATCH_TIMEOUT_SECONDS: "5"
+  MESSAGE_FORMAT: "json"
+  LOG_LEVEL: "INFO"

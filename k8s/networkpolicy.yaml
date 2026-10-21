@@ -1,0 +1,38 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: swat-streaming-egress
+  namespace: swat-streaming
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: swat-streaming
+  policyTypes:
+    - Egress
+    - Ingress
+  ingress: []
+  egress:
+    # DNS
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Kafka brokers (restrict to your broker network)
+    - to:
+        - ipBlock:
+            cidr: 10.0.0.0/8
+      ports:
+        - protocol: TCP
+          port: 9093
+    # SAS Viya CAS REST endpoint
+    - to:
+        - ipBlock:
+            cidr: 10.0.0.0/8
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 8777

@@ -1,0 +1,6 @@
+confluent-kafka==2.6.1
+swat==1.14.0
+pandas==2.2.3
+pyarrow==18.1.0
+python-json-logger==3.2.1
+tenacity==9.0.0

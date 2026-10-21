@@ -1,0 +1,19 @@
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.env
+.env.*
+*.log
+.idea/
+.vscode/
+# Never commit real secrets
+k8s/secret.yaml
+k8s/secret.*.yaml
+!k8s/secret.example.yaml
+*.pem
+*.key
+*.crt
+!docs/**/*.crt
+CLAUDE.md

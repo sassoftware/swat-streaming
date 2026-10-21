@@ -1,0 +1,95 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: swat-streaming-producer
+  namespace: swat-streaming
+  labels:
+    app.kubernetes.io/name: swat-streaming
+    app.kubernetes.io/component: test-producer
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 600
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: swat-streaming
+        app.kubernetes.io/component: test-producer
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: producer
+          image: ghcr.io/your-org/swat-streaming:0.1.0
+          imagePullPolicy: IfNotPresent
+          command: ["/usr/bin/tini", "--", "python", "-m", "producer.main"]
+          envFrom:
+            # Re-use the same ConfigMap; only KAFKA_* keys are read by the producer.
+            - configMapRef:
+                name: swat-streaming-config
+          env:
+            - name: KAFKA_SASL_USERNAME_FILE
+              value: /etc/kafka/credentials/username
+            - name: KAFKA_SASL_PASSWORD_FILE
+              value: /etc/kafka/credentials/password
+            # Tunables for the synthetic stream
+            - name: PRODUCER_RATE_PER_SECOND
+              value: "50"
+            - name: PRODUCER_DURATION_SECONDS
+              value: "600"
+            - name: PRODUCER_NUM_ACCOUNTS
+              value: "5000"
+            - name: PRODUCER_NUM_MERCHANTS
+              value: "800"
+            - name: PRODUCER_FRAUD_RATE
+              value: "0.02"
+            - name: PRODUCER_SEED
+              value: "42"
+            - name: LOG_LEVEL
+              value: "INFO"
+          volumeMounts:
+            - name: kafka-creds
+              mountPath: /etc/kafka/credentials
+              readOnly: true
+            - name: kafka-certs
+              mountPath: /etc/kafka/certs
+              readOnly: true
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+      volumes:
+        # The producer needs WRITE on the topic — make sure the SASL user used
+        # here has Write+Describe ACL. In most environments you'll want a
+        # SEPARATE secret (kafka-producer-credentials) with a producer-only
+        # account rather than reusing the consumer's read-only credentials.
+        - name: kafka-creds
+          secret:
+            secretName: kafka-credentials
+            items:
+              - key: username
+                path: username
+              - key: password
+                path: password
+            defaultMode: 0400
+        - name: kafka-certs
+          secret:
+            secretName: kafka-credentials
+            items:
+              - key: ca.crt
+                path: ca.crt
+            defaultMode: 0444
